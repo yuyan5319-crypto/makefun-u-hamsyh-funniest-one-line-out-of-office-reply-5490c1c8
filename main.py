@@ -16,10 +16,14 @@ LINE = (
 
 
 def main() -> int:
+    # Gate: exactly one line, 1-160 chars, not whitespace-only.
     if not (1 <= len(LINE) <= 160):
         print(f"line is {len(LINE)} chars, must be 1-160", file=sys.stderr)
         return 1
-    if "\n" in LINE.strip():
+    if not LINE.strip():
+        print("line must not be whitespace-only", file=sys.stderr)
+        return 1
+    if "\n" in LINE or "\r" in LINE:
         print("line must be a single line", file=sys.stderr)
         return 1
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
@@ -27,6 +31,12 @@ def main() -> int:
     path = os.path.join(out_dir, "entry.txt")
     with open(path, "w", encoding="utf-8") as f:
         f.write(LINE)
+    # Read-back verification: the file must contain exactly the line.
+    with open(path, encoding="utf-8") as f:
+        written = f.read()
+    if written != LINE:
+        print(f"read-back mismatch in {path}", file=sys.stderr)
+        return 1
     print(f"wrote {len(LINE)} chars to {path}")
     return 0
 
